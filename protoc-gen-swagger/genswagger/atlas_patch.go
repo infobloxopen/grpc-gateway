@@ -81,7 +81,7 @@ func atlasSwagger(b []byte) string {
 								" | or | Logical OR |\n" +
 								" | not | Logical NOT |\n" +
 								" | () | Groupping Operators |\n",
-						))
+						).Typed("string", ""))
 					case "sorting":
 						fixedParams = append(fixedParams, *(spec.QueryParam("_order_by")).WithDescription(
 							"A collection of response resources can be sorted by their JSON tags. For a " +
