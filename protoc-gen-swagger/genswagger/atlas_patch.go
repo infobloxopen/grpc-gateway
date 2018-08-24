@@ -95,7 +95,7 @@ func atlasSwagger(b []byte) string {
 								"name. The suffix “asc” sorts the data in ascending order. The suffix “desc” " +
 								"sorts the data in descending order. If no suffix is specified the data is sorted " +
 								"in ascending order.",
-						))
+						).Typed("string", ""))
 					case "field_selection":
 						fixedParams = append(fixedParams, *(spec.QueryParam("_fields")).WithDescription(
 
@@ -107,23 +107,23 @@ func atlasSwagger(b []byte) string {
 								"in the output resource." +
 								"\n\n" +
 								"Specify this parameter as a comma-separated list of JSON tag names.",
-						))
+						).Typed("string", ""))
 					case "paging":
 						fixedParams = append(
 							fixedParams,
 							*(spec.QueryParam("_offset")).WithDescription(
 								"The integer index (zero-origin) of the offset into a collection of resources. " +
 									"If omitted or null the value is assumed to be “0”.",
-							),
+							).Typed("integer", ""),
 							*(spec.QueryParam("_limit")).WithDescription(
 								"The integer number of resources to be returned in the response. The " +
 									"service may impose maximum value. If omitted the service may impose " +
 									"a default value.",
-							),
+							).Typed("integer", ""),
 							*(spec.QueryParam("_page_token")).WithDescription(
 								"The service-defined string used to identify a page of resources. A null value " +
 									"indicates the first page.",
-							),
+							).Typed("string", ""),
 						)
 					// Skip ID
 					default:
