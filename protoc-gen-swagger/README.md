@@ -27,4 +27,24 @@ Patch includes following changes:
      query parameters, also id.payload_id is replaced with id in path.
 
    * Unused references elimination.
-
+   
+   * Exclude all operations tagged as "private" see example below
+       ```
+       rpc Update (UpdateNetworkRequest) returns (UpdateNetworkResponse) {
+           option (google.api.http) = {
+             put: "/network/{payload.id.resource_id}"
+             body: "payload"
+       
+             additional_bindings {
+               patch: "/network/{payload.id.resource_id}",
+               body:  "payload"
+             }
+       
+           };
+           option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+             tags: "private"
+           };
+         }
+       ```
+   * Introduced new `with_private` flag if set generate service.private.swagger.json
+   with all operation (including tagged as "private")
