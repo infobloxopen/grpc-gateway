@@ -22,6 +22,7 @@ var (
 	allowMerge           = flag.Bool("allow_merge", false, "if set, generation one swagger file out of multiple protos")
 	mergeFileName        = flag.String("merge_file_name", "apidocs", "target swagger file name prefix after merge")
 	atlasPatch           = flag.Bool("atlas_patch", false, "if set, generation will be proceded with atlas-patch changes")
+	withPrivate          = flag.Bool("with_private", false, "if unset, generate swagger schema without operations 0 as 'private' work only if atlas_patch set")
 )
 
 func main() {
@@ -57,6 +58,7 @@ func main() {
 	reg.SetAllowDeleteBody(*allowDeleteBody)
 	reg.SetAllowMerge(*allowMerge)
 	reg.SetAtlasPatch(*atlasPatch)
+	reg.SetWithPrivateOperations(*withPrivate)
 	reg.SetMergeFileName(*mergeFileName)
 	for k, v := range pkgMap {
 		reg.AddPkgMap(k, v)

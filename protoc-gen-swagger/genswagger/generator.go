@@ -121,41 +121,28 @@ func (g *generator) Generate(targets []*descriptor.File) ([]*plugin.CodeGenerato
 	if g.reg.IsAllowMerge() {
 		targetSwagger := mergeTargetFile(swaggers, g.reg.GetMergeFileName())
 		resFile := encodeSwagger(targetSwagger)
-		fileContent := []byte(*resFile.Content)
 		if g.reg.IsAtlasPatch() {
-			resFile.Content = proto.String(atlasSwagger(fileContent, false))
+			resFile.Content = proto.String(atlasSwagger([]byte(*resFile.Content), g.reg.IsWithPrivateOperations()))
+			if g.reg.IsWithPrivateOperations(){
+				privateFileName := strings.Replace(resFile.GetName(), ".swagger.json", ".private.swagger.json", -1)
+				resFile.Name = &privateFileName
+			}
 		}
 		files = append(files, resFile)
 		glog.V(1).Infof("New swagger file will emit")
-
-		if g.reg.IsAtlasPatch() {
-			privateFileName := strings.Replace(resFile.GetName(), ".swagger.json", ".private.swagger.json", -1)
-			resFilePrivate := &plugin.CodeGeneratorResponse_File{
-				Name: &privateFileName,
-				Content: proto.String(atlasSwagger(fileContent, true)),
-			}
-			files = append(files, resFilePrivate)
-			glog.V(1).Infof("New private swagger file will emit")
-		}
 	} else {
 		for _, file := range swaggers {
 			resFile := encodeSwagger(file)
 			fileContent := []byte(*resFile.Content)
 			if g.reg.IsAtlasPatch() {
-				resFile.Content = proto.String(atlasSwagger(fileContent, false))
+				resFile.Content = proto.String(atlasSwagger(fileContent, g.reg.IsWithPrivateOperations()))
+				if g.reg.IsWithPrivateOperations(){
+					privateFileName := strings.Replace(resFile.GetName(), ".swagger.json", ".private.swagger.json", -1)
+					resFile.Name = &privateFileName
+				}
 			}
 			files = append(files, resFile)
 			glog.V(1).Infof("New swagger file will emit")
-
-			if g.reg.IsAtlasPatch() {
-				privateFileName := strings.Replace(resFile.GetName(), ".swagger.json", ".private.swagger.json", -1)
-				resFilePrivate := &plugin.CodeGeneratorResponse_File{
-					Name: &privateFileName,
-					Content : proto.String(atlasSwagger(fileContent, true)),
-				}
-				files = append(files, resFilePrivate)
-				glog.V(1).Infof("New private swagger file will emit")
-			}
 		}
 	}
 	return files, nil

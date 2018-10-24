@@ -47,6 +47,9 @@ type Registry struct {
 	// atlasPatch ...
 	atlasPatch bool
 
+	//withPrivateOperations if true exclude all operations with tag "private"
+	withPrivateOperations bool
+
 	// mergeFileName target swagger file name after merge
 	mergeFileName string
 }
@@ -323,6 +326,15 @@ func (r *Registry) IsAtlasPatch() bool {
 
 func (r *Registry) SetAtlasPatch(atlas bool) {
 	r.atlasPatch = atlas
+}
+
+// IsWithPrivateOperations if true exclude all operations with tag "private"
+func (r *Registry) IsWithPrivateOperations() bool {
+	return r.withPrivateOperations
+}
+
+func (r *Registry) SetWithPrivateOperations(withPrivateOperations bool) {
+	r.withPrivateOperations = withPrivateOperations
 }
 
 // SetMergeFileName controls the target swagger file name out of multiple protos
