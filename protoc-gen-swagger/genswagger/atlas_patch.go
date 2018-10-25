@@ -258,6 +258,9 @@ The service-defined string used to identify a page of resources. A null value in
 		sw.Paths.Paths[pn] = pi
 	}
 
+	if !withPrivateMethods {
+		sw.Definitions = filterDefinitions()
+	}
 	bOut, err := json.MarshalIndent(sw, "", "  ")
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error marshalling result: %v", err)
@@ -434,4 +437,74 @@ func IsPathEmpty(pi spec.PathItem) (bool) {
 		return false
 	}
 	return true
+}
+
+func filterDefinitions() (newDefinitions spec.Definitions) {
+	marh, _ := sw.MarshalJSON()
+	v := map[string]interface{}{}
+	if err := json.Unmarshal(marh, &v); err != nil {
+		panic(err.Error())
+	}
+
+	defs := v["definitions"].(map[string]interface{})
+	newDefinitions = make(spec.Definitions)
+
+	for rk := range gatherRefs(v["paths"]) {
+		rName := refToName(rk)
+		newDefinitions[rName] = sw.Definitions[rName]
+		for rrName := range gatherDefinitionRefs(rk, defs) {
+			newDefinitions[rrName] = sw.Definitions[rrName]
+		}
+	}
+
+	return newDefinitions
+}
+
+func gatherDefinitionRefs(ref string, defs map[string]interface{}) map[string]struct{} {
+	var refs = map[string]struct{}{}
+
+	gatherDefinitionRefsAux(ref, defs, refs)
+	return refs
+}
+
+
+func gatherDefinitionRefsAux(ref string, defs map[string]interface{}, refs map[string]struct{}) {
+	if _, ok := refs[refToName(ref)]; ok {
+		return
+	}
+
+	for r := range gatherRefs(defs[refToName(ref)]) {
+		refs[refToName(r)] = struct{}{}
+		gatherDefinitionRefsAux(r, defs, refs)
+	}
+
+	return
+}
+
+func gatherRefs(v interface{}) map[string]struct{} {
+	refs := map[string]struct{}{}
+	switch v := v.(type) {
+	case map[string]interface{}:
+		for k, vv := range v {
+			if k == "$ref" {
+				refs[vv.(string)] = struct{}{}
+			}
+
+			for rk := range gatherRefs(vv) {
+				refs[rk] = struct{}{}
+			}
+		}
+	case []interface{}:
+		for _, vv := range v {
+			for rk, _ := range gatherRefs(vv) {
+				refs[rk] = struct{}{}
+			}
+		}
+	}
+
+	return refs
+}
+
+func refToName(ref string) string {
+	return strings.TrimPrefix(ref, "#/definitions/")
 }
