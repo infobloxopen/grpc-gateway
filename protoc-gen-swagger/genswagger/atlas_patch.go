@@ -157,12 +157,31 @@ The service-defined string used to identify a page of resources. A null value in
 						schema.Properties = map[string]spec.Schema{}
 					}
 
-					schema.Properties["success"] = *(&spec.Schema{}).WithProperties(
-						map[string]spec.Schema{
-							"status":  *spec.StringProperty().WithExample(opToStatus(on)),
-							"code":    *spec.Int32Property().WithExample(opToCode(on)),
-							"message": *spec.StringProperty().WithExample("<response message>"),
-						})
+					successSchema := map[string]spec.Schema{
+						"status":  *spec.StringProperty().WithExample(opToStatus(on)),
+						"code":    *spec.Int32Property().WithExample(opToCode(on)),
+						"message": *spec.StringProperty().WithExample("<response message>"),
+					}
+
+					def := sw.Definitions[trim(rsp.Schema.Ref)]
+					for fn, v := range def.Properties {
+						if v.Ref.String() == "#/definitions/apiPageInfo" {
+							successSchema["_offset"] = *spec.Int32Property().WithExample(5).
+								WithDescription("The service may optionally include the offset of the next page of resources. A null value indicates no more pages.")
+
+							successSchema["_size"] = *spec.StringProperty().WithExample(25).
+								WithDescription("The service may optionally include the total number of resources being paged.")
+
+							successSchema["_pagetoken"] = *spec.StringProperty().WithExample(opToStatus(on)).
+								WithDescription("The service response may optionally contain a string to indicate the next page of resources. A null value indicates no more pages.")
+							delete(def.Properties, fn)
+							break
+						}
+					}
+					
+					delete(sw.Definitions, "apiPageInfo")
+
+					schema.Properties["success"] = *(&spec.Schema{}).WithProperties(successSchema)
 
 					sw.Definitions[trim(rsp.Schema.Ref)] = schema
 
