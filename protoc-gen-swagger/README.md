@@ -15,7 +15,7 @@ Patch includes following changes:
    following changes are made to a swagger spec:
 
    * All responses are wrapped with `success` field and assigned to an appropriate response code:
-     GET - 200/OK, POST - 201/CREATED, PUT - 202/UPDATED, DELETE - 203/DELETED.
+     GET - 200/OK, POST - 201/CREATED, PUT - 202/UPDATED, DELETE - 204/DELETED.
 
    * Recursive references are broken up. Such references occur while using protoc-gen-gorm plugin
      with many-to-many/one-to-many relations.
