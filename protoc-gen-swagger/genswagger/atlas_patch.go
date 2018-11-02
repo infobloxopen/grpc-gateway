@@ -157,13 +157,13 @@ The service-defined string used to identify a page of resources. A null value in
 						schema.Properties = map[string]spec.Schema{}
 					}
 
+					def := sw.Definitions[trim(rsp.Schema.Ref)]
 					successSchema := map[string]spec.Schema{
 						"status":  *spec.StringProperty().WithExample(opToStatus(on)),
 						"code":    *spec.Int32Property().WithExample(opToCode(on)),
 						"message": *spec.StringProperty().WithExample("<response message>"),
 					}
 
-					def := sw.Definitions[trim(rsp.Schema.Ref)]
 					for fn, v := range def.Properties {
 						if v.Ref.String() == "#/definitions/apiPageInfo" {
 							successSchema["_offset"] = *spec.Int32Property().WithExample(5).
@@ -178,22 +178,41 @@ The service-defined string used to identify a page of resources. A null value in
 							break
 						}
 					}
-					
+
 					delete(sw.Definitions, "apiPageInfo")
-
-					schema.Properties["success"] = *(&spec.Schema{}).WithProperties(successSchema)
-
-					sw.Definitions[trim(rsp.Schema.Ref)] = schema
-
-					refs = append(refs, rsp.Schema.Ref)
-
-					delete(op.Responses.StatusCodeResponses, 200)
-
 					if rsp.Description == "" {
 						rsp.Description = on + " operation response"
 					}
 
-					op.Responses.StatusCodeResponses[opToCode(on)] = rsp
+					switch on {
+					case "DELETE":
+						if len(def.Properties) == 0 {
+							rsp.Description = "No Content"
+							rsp.Schema = nil
+							op.Responses.StatusCodeResponses[opToCode(on)] = rsp
+							delete(sw.Definitions, trim(rsp.Ref))
+							delete(op.Responses.StatusCodeResponses, 200)
+							break
+						}
+
+						schema.Properties["success"] = *(&spec.Schema{}).WithProperties(successSchema)
+
+						sw.Definitions[trim(rsp.Schema.Ref)] = schema
+
+						refs = append(refs, rsp.Schema.Ref)
+
+						op.Responses.StatusCodeResponses[200] = rsp
+					default:
+						schema.Properties["success"] = *(&spec.Schema{}).WithProperties(successSchema)
+
+						sw.Definitions[trim(rsp.Schema.Ref)] = schema
+
+						refs = append(refs, rsp.Schema.Ref)
+
+						delete(op.Responses.StatusCodeResponses, 200)
+
+						op.Responses.StatusCodeResponses[opToCode(on)] = rsp
+					}
 				}
 			}
 
