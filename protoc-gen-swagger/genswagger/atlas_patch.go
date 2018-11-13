@@ -483,8 +483,7 @@ func filterDefinitions() (newDefinitions spec.Definitions) {
 	if err := json.Unmarshal(marh, &v); err != nil {
 		panic(err.Error())
 	}
-
-	defs := v["definitions"].(map[string]interface{})
+	defs, _ := v["definitions"].(map[string]interface{})
 	newDefinitions = make(spec.Definitions)
 
 	for rk := range gatherRefs(v["paths"]) {
