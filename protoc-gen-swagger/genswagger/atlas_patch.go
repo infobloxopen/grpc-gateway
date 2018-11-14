@@ -498,20 +498,16 @@ func filterDefinitions() (newDefinitions spec.Definitions) {
 }
 
 func gatherDefinitionRefs(ref string, defs map[string]interface{}) map[string]struct{} {
-	var refs = map[string]struct{}{}
+	var refs = make(map[string]struct{})
 
-	gatherDefinitionRefsAux(ref, defs, refs)
+	gatherDefinitionRefsAux(refToName(ref), defs, refs)
 	return refs
 }
 
 
 func gatherDefinitionRefsAux(ref string, defs map[string]interface{}, refs map[string]struct{}) {
-	if _, ok := refs[refToName(ref)]; ok {
-		return
-	}
-
-	for r := range gatherRefs(defs[refToName(ref)]) {
-		refs[refToName(r)] = struct{}{}
+	for r := range gatherRefs(defs[ref]) {
+		refs[r] = struct{}{}
 		gatherDefinitionRefsAux(r, defs, refs)
 	}
 
@@ -524,7 +520,7 @@ func gatherRefs(v interface{}) map[string]struct{} {
 	case map[string]interface{}:
 		for k, vv := range v {
 			if k == "$ref" {
-				refs[vv.(string)] = struct{}{}
+				refs[refToName(vv.(string))] = struct{}{}
 			}
 
 			for rk := range gatherRefs(vv) {
@@ -533,7 +529,7 @@ func gatherRefs(v interface{}) map[string]struct{} {
 		}
 	case []interface{}:
 		for _, vv := range v {
-			for rk, _ := range gatherRefs(vv) {
+			for rk := range gatherRefs(vv) {
 				refs[rk] = struct{}{}
 			}
 		}
