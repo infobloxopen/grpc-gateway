@@ -159,8 +159,8 @@ The service-defined string used to identify a page of resources. A null value in
 
 					def := sw.Definitions[trim(rsp.Schema.Ref)]
 					successSchema := map[string]spec.Schema{
-						"status":  *spec.StringProperty().WithExample(opToStatus(on)),
-						"code":    *spec.Int32Property().WithExample(opToCode(on)),
+						"status":  *spec.Int32Property().WithExample(opToStatusCode(on)),
+						"code":    *spec.StringProperty().WithExample(opToTextCode(on)),
 						"message": *spec.StringProperty().WithExample("<response message>"),
 					}
 
@@ -169,10 +169,10 @@ The service-defined string used to identify a page of resources. A null value in
 							successSchema["_offset"] = *spec.Int32Property().WithExample(5).
 								WithDescription("The service may optionally include the offset of the next page of resources. A null value indicates no more pages.")
 
-							successSchema["_size"] = *spec.StringProperty().WithExample(25).
+							successSchema["_size"] = *spec.Int32Property().WithExample(25).
 								WithDescription("The service may optionally include the total number of resources being paged.")
 
-							successSchema["_pagetoken"] = *spec.StringProperty().WithExample(opToStatus(on)).
+							successSchema["_pagetoken"] = *spec.StringProperty().WithExample("<token>").
 								WithDescription("The service response may optionally contain a string to indicate the next page of resources. A null value indicates no more pages.")
 							delete(def.Properties, fn)
 							break
@@ -189,29 +189,21 @@ The service-defined string used to identify a page of resources. A null value in
 						if len(def.Properties) == 0 {
 							rsp.Description = "No Content"
 							rsp.Schema = nil
-							op.Responses.StatusCodeResponses[opToCode(on)] = rsp
+							op.Responses.StatusCodeResponses[opToStatusCode(on)] = rsp
 							delete(sw.Definitions, trim(rsp.Ref))
 							delete(op.Responses.StatusCodeResponses, 200)
 							break
 						}
-
 						schema.Properties["success"] = *(&spec.Schema{}).WithProperties(successSchema)
-
 						sw.Definitions[trim(rsp.Schema.Ref)] = schema
-
 						refs = append(refs, rsp.Schema.Ref)
-
 						op.Responses.StatusCodeResponses[200] = rsp
 					default:
 						schema.Properties["success"] = *(&spec.Schema{}).WithProperties(successSchema)
-
 						sw.Definitions[trim(rsp.Schema.Ref)] = schema
-
 						refs = append(refs, rsp.Schema.Ref)
-
 						delete(op.Responses.StatusCodeResponses, 200)
-
-						op.Responses.StatusCodeResponses[opToCode(on)] = rsp
+						op.Responses.StatusCodeResponses[opToStatusCode(on)] = rsp
 					}
 				}
 			}
@@ -440,7 +432,7 @@ func pathItemAsMap(pi spec.PathItem) map[string]*spec.Operation {
 	}
 }
 
-func opToCode(on string) int {
+func opToStatusCode(on string) int {
 	return map[string]int{
 		"GET":    200,
 		"POST":   201,
@@ -450,7 +442,7 @@ func opToCode(on string) int {
 	}[on]
 }
 
-func opToStatus(on string) string {
+func opToTextCode(on string) string {
 	return map[string]string{
 		"GET":    "OK",
 		"POST":   "CREATED",
