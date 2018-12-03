@@ -594,6 +594,7 @@ func templateToSwaggerPath(path string) string {
 				// section.
 				continue
 			}
+			buffer += string(char)
 		default:
 			buffer += string(char)
 			break
@@ -608,6 +609,15 @@ func templateToSwaggerPath(path string) string {
 	// memory.
 	re := regexp.MustCompile("{([a-zA-Z][a-zA-Z0-9_.]*).*}")
 	for index, part := range parts {
+		if strings.Contains(part, "=") && !strings.Contains(part, "*"){
+			v := strings.Split(strings.TrimSuffix(strings.TrimPrefix(part, "{"), "}"), "=")
+			if len(v) == 2 {
+				part = v[1]
+				parts[index] = part
+				continue
+			}
+		}
+
 		parts[index] = re.ReplaceAllString(part, "{$1}")
 	}
 
