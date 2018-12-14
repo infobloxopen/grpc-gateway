@@ -158,28 +158,6 @@ The service-defined string used to identify a page of resources. A null value in
 					}
 
 					def := sw.Definitions[trim(rsp.Schema.Ref)]
-					successSchema := map[string]spec.Schema{
-						"status":  *spec.Int32Property().WithExample(opToStatusCode(on)),
-						"code":    *spec.StringProperty().WithExample(opToTextCode(on)),
-						"message": *spec.StringProperty().WithExample("<response message>"),
-					}
-
-					for fn, v := range def.Properties {
-						if v.Ref.String() == "#/definitions/apiPageInfo" {
-							successSchema["_offset"] = *spec.Int32Property().WithExample(5).
-								WithDescription("The service may optionally include the offset of the next page of resources. A null value indicates no more pages.")
-
-							successSchema["_size"] = *spec.Int32Property().WithExample(25).
-								WithDescription("The service may optionally include the total number of resources being paged.")
-
-							successSchema["_pagetoken"] = *spec.StringProperty().WithExample("<token>").
-								WithDescription("The service response may optionally contain a string to indicate the next page of resources. A null value indicates no more pages.")
-							delete(def.Properties, fn)
-							break
-						}
-					}
-
-					delete(sw.Definitions, "apiPageInfo")
 					if rsp.Description == "" {
 						rsp.Description = on + " operation response"
 					}
@@ -194,12 +172,10 @@ The service-defined string used to identify a page of resources. A null value in
 							delete(op.Responses.StatusCodeResponses, 200)
 							break
 						}
-						schema.Properties["success"] = *(&spec.Schema{}).WithProperties(successSchema)
 						sw.Definitions[trim(rsp.Schema.Ref)] = schema
 						refs = append(refs, rsp.Schema.Ref)
 						op.Responses.StatusCodeResponses[200] = rsp
 					default:
-						schema.Properties["success"] = *(&spec.Schema{}).WithProperties(successSchema)
 						sw.Definitions[trim(rsp.Schema.Ref)] = schema
 						refs = append(refs, rsp.Schema.Ref)
 						delete(op.Responses.StatusCodeResponses, 200)
