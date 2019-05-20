@@ -15,10 +15,11 @@ package genswagger
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/go-openapi/spec"
 	"log"
 	"os"
 	"strings"
+
+	"github.com/go-openapi/spec"
 )
 
 const (
@@ -137,6 +138,15 @@ The service-defined string used to identify a page of resources. A null value in
 				} else if strings.HasSuffix(param.Name, "id.resource_id") || strings.HasSuffix(param.Name, ".id") {
 					param.Name = "id"
 					fixedParams = append(fixedParams, param)
+				} else if strings.HasPrefix(param.Description, "tagging.api.") {
+					switch strings.TrimPrefix(param.Description, "tagging.api.") {
+					case "filtering":
+						fixedParams = append(fixedParams, *(spec.QueryParam("_tfilter")).WithDescription("This parameter used for filtering by tags").Typed("string", ""))
+					case "sorting":
+						fixedParams = append(fixedParams, *(spec.QueryParam("_torder_by")).WithDescription("This parameter used for sorting by tags").Typed("string", ""))
+					default:
+						fixedParams = append(fixedParams, param)
+					}
 				} else {
 					// Gather ref in body.
 					if param.In == "body" && param.Schema != nil {
@@ -673,6 +683,4 @@ func messageWalk(j json.RawMessage) (interface{}, error) {
 	} else {
 		return nil, fmt.Errorf("unsuported message type")
 	}
-
-	return nil, nil
 }
