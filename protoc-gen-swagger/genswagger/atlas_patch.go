@@ -141,9 +141,9 @@ The service-defined string used to identify a page of resources. A null value in
 				} else if strings.HasPrefix(param.Description, "tagging.api.") {
 					switch strings.TrimPrefix(param.Description, "tagging.api.") {
 					case "filtering":
-						fixedParams = append(fixedParams, *(spec.QueryParam("_tfilter")).WithDescription("This parameter used for filtering by tags").Typed("string", ""))
+						fixedParams = append(fixedParams, *(spec.QueryParam("_tfilter")).WithDescription("This parameter is used for filtering by tags.").Typed("string", ""))
 					case "sorting":
-						fixedParams = append(fixedParams, *(spec.QueryParam("_torder_by")).WithDescription("This parameter used for sorting by tags").Typed("string", ""))
+						fixedParams = append(fixedParams, *(spec.QueryParam("_torder_by")).WithDescription("This parameter is used for sorting by tags.").Typed("string", ""))
 					default:
 						fixedParams = append(fixedParams, param)
 					}
