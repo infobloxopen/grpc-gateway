@@ -193,7 +193,6 @@ func findServicesMessagesAndEnumerations(s []*descriptor.Service, reg *descripto
 				m[fullyQualifiedNameToSwaggerName(meth.RequestType.FQMN(), reg)] = meth.RequestType
 			}
 
-
 			findNestedMessagesAndEnumerations(meth.RequestType, reg, m, e)
 			m[fullyQualifiedNameToSwaggerName(meth.ResponseType.FQMN(), reg)] = meth.ResponseType
 			findNestedMessagesAndEnumerations(meth.ResponseType, reg, m, e)
@@ -321,6 +320,22 @@ func renderMessagesAsDefinition(messages messageMap, d swaggerDefinitionsObject,
 			}
 		}
 
+		// Substitute default representation of the gorm.types.JSONValue
+		if strings.Index(name, "JSONValue") != -1 {
+			schema = schemaOfField(msg.Fields[0], reg, customRefs)
+			schema.Type = "object"
+			schema.Format = "string"
+			if schema.Description == "" {
+				comments := fieldProtoComments(reg, msg, msg.Fields[0])
+				if err := updateSwaggerDataFromComments(&schema, comments); err != nil {
+					panic(err)
+				}
+			}
+
+			d[fullyQualifiedNameToSwaggerName(msg.FQMN(), reg)] = schema
+			continue
+		}
+
 		for _, f := range msg.Fields {
 			fieldValue := schemaOfField(f, reg, customRefs)
 			if fieldValue.Description == "" {
@@ -332,6 +347,7 @@ func renderMessagesAsDefinition(messages messageMap, d swaggerDefinitionsObject,
 
 			schema.Properties = append(schema.Properties, keyVal{f.GetName(), fieldValue})
 		}
+
 		d[fullyQualifiedNameToSwaggerName(msg.FQMN(), reg)] = schema
 	}
 }
@@ -368,13 +384,13 @@ func schemaOfField(f *descriptor.Field, reg *descriptor.Registry, refs refMap) s
 			t, f := protoJSONSchemaTypeToFormat(s.GetJsonSchema().GetType())
 			if aggregate == array {
 				core = schemaCore{
-					Type: "array",
+					Type:   "array",
 					Format: f,
 					Items: &swaggerItemsObject{
-						Type:t,
+						Type: t,
 					},
 				}
-			}else {
+			} else {
 				core = schemaCore{
 					Type:   t,
 					Format: f,
@@ -619,7 +635,7 @@ func templateToSwaggerPath(path string) string {
 	// memory.
 	re := regexp.MustCompile("{([a-zA-Z][a-zA-Z0-9_.]*).*}")
 	for index, part := range parts {
-		if strings.Contains(part, "=") && !strings.Contains(part, "*"){
+		if strings.Contains(part, "=") && !strings.Contains(part, "*") {
 			v := strings.Split(strings.TrimSuffix(strings.TrimPrefix(part, "{"), "}"), "=")
 			if len(v) == 2 {
 				part = v[1]
@@ -1422,7 +1438,6 @@ func updateSwaggerObjectFromJSONSchema(s *swaggerSchemaObject, j *swagger_option
 	s.MinProperties = j.GetMinProperties()
 	s.Required = j.GetRequired()
 	s.ReadOnly = j.GetReadOnly()
-
 
 	if arr := j.GetArray(); len(arr) > 0 {
 		s.Type = "array"
