@@ -320,22 +320,6 @@ func renderMessagesAsDefinition(messages messageMap, d swaggerDefinitionsObject,
 			}
 		}
 
-		// Substitute default representation of the gorm.types.JSONValue
-		if strings.Index(name, "JSONValue") != -1 {
-			schema = schemaOfField(msg.Fields[0], reg, customRefs)
-			schema.Type = "object"
-			schema.Format = "string"
-			if schema.Description == "" {
-				comments := fieldProtoComments(reg, msg, msg.Fields[0])
-				if err := updateSwaggerDataFromComments(&schema, comments); err != nil {
-					panic(err)
-				}
-			}
-
-			d[fullyQualifiedNameToSwaggerName(msg.FQMN(), reg)] = schema
-			continue
-		}
-
 		for _, f := range msg.Fields {
 			fieldValue := schemaOfField(f, reg, customRefs)
 			if fieldValue.Description == "" {
@@ -398,11 +382,23 @@ func schemaOfField(f *descriptor.Field, reg *descriptor.Registry, refs refMap) s
 			}
 			return swaggerSchemaObject{schemaCore: core, Description: s.GetJsonSchema().GetDescription()}
 		} else {
-			core = schemaCore{
-				Ref: "#/definitions/" + fullyQualifiedNameToSwaggerName(fd.GetTypeName(), reg),
-			}
 			if refs != nil {
 				refs[fd.GetTypeName()] = struct{}{}
+			}
+
+			// Substitute all refs with default representation of the gorm.types.JSONValue on map[string]interface{}
+			refName := fullyQualifiedNameToSwaggerName(fd.GetTypeName(), reg)
+			if strings.Index(refName, "JSONValue") == -1 {
+				core = schemaCore{
+					Ref: "#/definitions/" + refName,
+				}
+			} else {
+				return swaggerSchemaObject{
+					schemaCore: schemaCore{
+						Type: "object",
+					},
+					AdditionalProperties: &swaggerSchemaObject{},
+				}
 			}
 		}
 	default:
