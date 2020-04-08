@@ -198,7 +198,7 @@ type swaggerSchemaObject struct {
 	schemaCore
 	// Properties can be recursively defined
 	Properties           swaggerSchemaObjectProperties `json:"properties,omitempty"`
-	AdditionalProperties *swaggerSchemaObject          `json:"additionalProperties,omitempty"`
+	AdditionalProperties *swaggerSchemaObject          `json:"additionalProperties"`
 
 	Description string `json:"description,omitempty"`
 	Title       string `json:"title,omitempty"`
