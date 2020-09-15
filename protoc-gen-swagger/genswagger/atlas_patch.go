@@ -32,10 +32,55 @@ var (
 	seenRefs = map[string]bool{}
 )
 
+// filterPathVars returns new params list with: required "true" and path "in" variables only if they present
+// in URL path request
+func filterPathVars(path string, params []spec.Parameter) []spec.Parameter {
+	var newParams []spec.Parameter
+	for _, param := range params {
+		if !param.ParamProps.Required || !(param.ParamProps.In == "path") || strings.Contains(path, fmt.Sprintf("{%s}", param.ParamProps.Name)) {
+			newParams = append(newParams, param)
+		}
+	}
+
+	return newParams
+}
+
 func atlasSwagger(b []byte, withPrivateMethods, withCustomAnnotations bool) string {
 	if err := json.Unmarshal(b, &sw); err != nil {
 		fmt.Fprintf(os.Stderr, "error parsing JSON: %v\n", err)
 		os.Exit(1)
+	}
+
+	// remove params that are not part of path
+	for path, item := range sw.Paths.Paths {
+		if item.Get != nil {
+			newParams := filterPathVars(path, item.Get.Parameters)
+			item.Get.Parameters = newParams
+		}
+		if item.Post != nil {
+			newParams := filterPathVars(path, item.Post.Parameters)
+			item.Post.Parameters = newParams
+		}
+		if item.Put != nil {
+			newParams := filterPathVars(path, item.Put.Parameters)
+			item.Put.Parameters = newParams
+		}
+		if item.Patch != nil {
+			newParams := filterPathVars(path, item.Patch.Parameters)
+			item.Patch.Parameters = newParams
+		}
+		if item.Delete != nil {
+			newParams := filterPathVars(path, item.Delete.Parameters)
+			item.Delete.Parameters = newParams
+		}
+		if item.Head != nil {
+			newParams := filterPathVars(path, item.Head.Parameters)
+			item.Head.Parameters = newParams
+		}
+		if item.Options != nil {
+			newParams := filterPathVars(path, item.Options.Parameters)
+			item.Options.Parameters = newParams
+		}
 	}
 
 	// Fix collection operators and IDs and gather refs along Paths.
