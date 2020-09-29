@@ -230,6 +230,7 @@ The service-defined string used to identify a page of resources. A null value in
 							op.Responses.StatusCodeResponses[opToStatusCode(on)] = rsp
 							delete(sw.Definitions, trim(rsp.Ref))
 							delete(op.Responses.StatusCodeResponses, 200)
+							delete(op.Responses.StatusCodeResponses, 201)
 							break
 						}
 						sw.Definitions[trim(rsp.Schema.Ref)] = schema
@@ -239,6 +240,7 @@ The service-defined string used to identify a page of resources. A null value in
 						sw.Definitions[trim(rsp.Schema.Ref)] = schema
 						refs = append(refs, rsp.Schema.Ref)
 						delete(op.Responses.StatusCodeResponses, 200)
+						delete(op.Responses.StatusCodeResponses, 201)
 						op.Responses.StatusCodeResponses[opToStatusCode(on)] = rsp
 					}
 				}
